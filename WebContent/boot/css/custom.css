@@ -1,0 +1,25 @@
+body {
+  padding-top: 70px;
+}
+#map_canvas {
+    height: 600px;
+}
+#sliderconainer {
+    padding-bottom: 20px;
+    padding-top: 20px
+}
+#slider {
+    padding-top: 2px;
+}
+#spinnercover {
+    position:absolute;  
+    width:100%;  
+    height:100%;  
+    filter:alpha(Opacity=60);-moz-opacity:0.6;opacity: 0.6;z-index:1000; background-color:#ffffff;  
+}
+#loading {
+	display: none;
+}
+#btn-exitrealtime {
+	display: none;
+}
