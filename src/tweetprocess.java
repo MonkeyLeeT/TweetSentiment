@@ -46,7 +46,7 @@ public final class TweetProcess {
          
         PropertiesCredentials propertiesCredentials = new PropertiesCredentials(Thread.currentThread().getContextClassLoader().getResourceAsStream("credentials.ini"));
         sqs = new SQS(propertiesCredentials);
-        queueUrl = "https://sqs.us-east-1.amazonaws.com/846524277299/TweetMap";
+        queueUrl = "https://sqs.us-east-1.amazonaws.com/328246660824/TweetSentimentQueue";
         //System.out.println(queueUrl);
         
         twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
