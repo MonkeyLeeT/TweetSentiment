@@ -1,9 +1,3 @@
-import java.io.IOException;
-import java.io.InputStream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 public class TweetRequest {
     private String id_str;
     private String created_at;

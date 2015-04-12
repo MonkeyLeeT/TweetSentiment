@@ -13,7 +13,7 @@
     <servlet-class>getTweets</servlet-class>
   </servlet>
   <listener>
-    <listener-class>TweetFetcher</listener-class>
+    <listener-class>TweetStream</listener-class>
   </listener>
   <servlet-mapping>
     <servlet-name>getTweets</servlet-name>
@@ -21,12 +21,12 @@
   </servlet-mapping>
   <servlet>
     <description></description>
-    <display-name>handleSns</display-name>
-    <servlet-name>handleSns</servlet-name>
-    <servlet-class>handleSns</servlet-class>
+    <display-name>SNSHandler</display-name>
+    <servlet-name>SNSHandler</servlet-name>
+    <servlet-class>SNSHandler</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>handleSns</servlet-name>
-    <url-pattern>/handleSns</url-pattern>
+    <servlet-name>SNSHandler</servlet-name>
+    <url-pattern>/SNSHandler</url-pattern>
   </servlet-mapping>
 </web-app>

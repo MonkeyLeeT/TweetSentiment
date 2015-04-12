@@ -24,7 +24,6 @@ public class getTweets extends HttpServlet {
      */
     public getTweets() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
 	/**

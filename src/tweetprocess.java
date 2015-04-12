@@ -22,20 +22,19 @@ import twitter4j.conf.ConfigurationBuilder;
  *
  * @author Yusuke Yamamoto - yusuke at mac.com
  */
-public final class TweetGet {
-	Sqs sqs;
-	String queueUrl = null;
+public final class TweetProcess {
+	SQS sqs;
+	String queueUrl;
 	TwitterStream twitterStream;
 	static Gson gson = new Gson();
 	
 	
     /**
      * Main entry of this application.
-     *
      * @param args
      * @throws IOException 
      */
-	public TweetGet() throws IOException {
+	public TweetProcess() throws IOException {
     	Properties twitterKey = new Properties();
     	twitterKey.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("credentials.ini"));
     	ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -46,18 +45,9 @@ public final class TweetGet {
            .setOAuthAccessTokenSecret(twitterKey.getProperty("tokenSecret"));
          
         PropertiesCredentials propertiesCredentials = new PropertiesCredentials(Thread.currentThread().getContextClassLoader().getResourceAsStream("credentials.ini"));
-        sqs = new Sqs(propertiesCredentials);
-        //queueUrl = sqs.createQueue("testQueue");
+        sqs = new SQS(propertiesCredentials);
         queueUrl = "https://sqs.us-east-1.amazonaws.com/846524277299/TweetMap";
         //System.out.println(queueUrl);
-        
-//        sqs.receiveMessage("https://sqs.us-west-2.amazonaws.com/452649417432/testQueue");
-//        sqs.deleteQueue("https://sqs.us-west-2.amazonaws.com/452649417432/testQueue");
-//
-//        rds.createTable("tweet_sentiment");
-//        rds.select();
-//        rds.deleteTable("tweet_sentiment");
-        
         
         twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
         StatusListener listener = new StatusListener() {
@@ -69,7 +59,6 @@ public final class TweetGet {
         			rds.setPassword(readPass());
         		}
                 rds.insert(String.valueOf(id_str), keyword, user, text, String.valueOf(latitude), String.valueOf(longitude), created_at);
-                //TODO: send what kind of message?
                 Tweet tweet = new Tweet(id_str, created_at, text, user, longitude, latitude);
                 System.out.println(gson.toJson(tweet));
                 sqs.sendMessage(queueUrl, gson.toJson(tweet));
@@ -77,9 +66,10 @@ public final class TweetGet {
         	
             @Override
             public void onStatus(Status status) {
-            	if(status.getGeoLocation() != null){
+            	if (status.getGeoLocation() != null){
             		String text=status.getText().toLowerCase();
             		String keyword=null;
+            		
             		if (text.contains("movie")) 
             			keyword="movie";
             		else if (text.contains("party"))
@@ -88,9 +78,9 @@ public final class TweetGet {
             			keyword="food";
             		else if (text.contains("soccer"))
             			keyword="soccer";
-	            if( status.getGeoLocation()!=null){
-	            	handleTweet(keyword,String.valueOf(status.getId()), status.getText(), status.getUser().getScreenName(), status.getCreatedAt().toString(), status.getGeoLocation().getLatitude(), status.getGeoLocation().getLongitude());
-	            }
+            		
+            		if (status.getGeoLocation() != null)
+            			handleTweet(keyword,String.valueOf(status.getId()), status.getText(), status.getUser().getScreenName(), status.getCreatedAt().toString(), status.getGeoLocation().getLatitude(), status.getGeoLocation().getLongitude());
             	}
             }
 
@@ -119,6 +109,7 @@ public final class TweetGet {
                 //ex.printStackTrace();
             }
         };
+        
         FilterQuery fq = new FilterQuery();
         String keys[] = {"movie","party","food","soccer"};
         fq.track(keys);
@@ -126,6 +117,7 @@ public final class TweetGet {
 	    twitterStream.filter(fq); 
 	}
     
+	@SuppressWarnings("resource")
 	private String readPass() {
 		InputStream password = Thread.currentThread().getContextClassLoader().getResourceAsStream("credentials.ini");
         String pass = null;

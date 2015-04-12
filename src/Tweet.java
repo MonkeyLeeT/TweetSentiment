@@ -1,9 +1,3 @@
-import java.io.IOException;
-import java.io.InputStream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 public class Tweet {
     private String id_str;
     private String created_at;
@@ -13,7 +7,6 @@ public class Tweet {
     private double latitude;
     
     public Tweet() {
-    	
     }
     
     public Tweet(String id, String created_at, String text, String user, double longitude, double latitude) {

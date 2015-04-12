@@ -11,13 +11,14 @@ import java.util.List;
 
 
 public class Rds {
+    private String password = null;
+    private static Rds instance = null;
     private final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    private final String DB_URL = "jdbc:mysql://tweetmap.crsarl5br9bw.us-east-1.rds.amazonaws.com:3306/tweet";
+    private final String DB_URL = "jdbc:mysql://tweet.cssmopf7grit.us-east-1.rds.amazonaws.com/tweets";
+    
     public Connection conn = null;
     public String table = "tweet_sentiment";
-    private String password = null;
     
-    private static Rds instance = null;
     private Rds() {
     	conn = null;
     }
@@ -32,14 +33,14 @@ public class Rds {
     	return conn != null;
     }
     
+    public boolean isPasswordSet() {
+    	return this.password != null;
+    }
+    
     public void setPassword(String password) {
     	this.password = password;
     	if (conn == null)
     		init();
-    }
-    
-    public boolean isPasswordSet() {
-    	return this.password != null;
     }
     
     public synchronized void init() {
@@ -47,55 +48,12 @@ public class Rds {
             try {
                 Class.forName(JDBC_DRIVER);
                 System.out.println("Connecting to database...");
-                conn = DriverManager.getConnection(DB_URL, "xiaojing", "exin82533");
+                conn = DriverManager.getConnection(DB_URL, "FallMonkey", password);
                 break;
             } catch (Exception e) {
             	e.printStackTrace();
             }
     	}
-    }
-    
-    public synchronized void createTable(String name) {
-    	this.table = name;
-        System.out.println("Creating table in given database...");
-        Statement stmt;
-        try {
-            stmt = conn.createStatement();
-            String sql = "CREATE TABLE IF NOT EXISTS " +name+ " "+
-                    "(id_str VARCHAR(255) not NULL, " +
-                    " keyword VARCHAR(20), " +
-                    " user VARCHAR(255), " +
-                    " text VARCHAR(2000), " +
-                    " latitude VARCHAR(255), " +
-                    " longitude VARCHAR(255), " +
-                    " created_at VARCHAR(255), " +
-                    " sentiment_exist TINYINT(1), " +
-                    " sentiment DOUBLE(4,3), " +
-                    " PRIMARY KEY ( id_str ))";
-            stmt.executeUpdate(sql);
-            stmt.close();
-            System.out.println("Finished creating table");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-
-    public synchronized void deleteTable(String name) {
-        System.out.println("Deleting table in given database...");
-        Statement stmt;
-        try {
-            stmt = conn.createStatement();
-            String sql = "DROP TABLE " + name;
-            stmt.executeUpdate(sql);
-            stmt.close();
-            System.out.println("Finished deleting table");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
     }
 
     HashMap<String, String> map = new HashMap<String, String>();
@@ -118,7 +76,7 @@ public class Rds {
     private String convertTime(String date) {
         String processed = null;
 
-        if(map.size()==0){
+        if (map.size() == 0) {
             createMap();
         }
 
@@ -134,52 +92,13 @@ public class Rds {
         return String.valueOf(timestamp.getTime());
     }
 
-    public synchronized String select() {
-        String sql = "SELECT * FROM "+table;
-//    	String selectExpression = "select * from " + table + " where created_at > '"+start+"' and created_at < '"+end+"'";
-        StringBuilder sb = new StringBuilder();
-        Statement stmt;
-        int count = 0;
-        try {
-            stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-            while(rs.next()){
-            	String id = rs.getString("id_str");
-
-                String text = rs.getString("text");
-                String keyword = rs.getString("keyword");
-                String user = rs.getString("user");
-                String c1 = rs.getString("latitude");
-                String c2 = rs.getString("longitude");
-                String time = rs.getString("created_at");
-                Boolean sen = rs.getBoolean("sentiment_exist");
-
-                
-                System.out.println("Keyword:" + keyword + "User:" + user + " Text:" + text+ " Created_at:"+ time + " id:"+id+ " sen:" + sen + " C1:" + c1);
-                count++;
-            }
-
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(count);
-        return sb.toString();
-
-    }
-
     public synchronized List<TweetRequest> select (String key, String start, String end) {
         String sql = "SELECT * FROM " + table + 
         		" WHERE created_at < '" + end + 
         		"' AND created_at > '" + start +
         		"'";
-    	StringBuilder sb = new StringBuilder();
         Statement stmt;
         List<TweetRequest> res = new ArrayList<TweetRequest> ();
-        int count = 0;
         try {
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
@@ -191,7 +110,7 @@ public class Rds {
             	String id = rs.getString("id_str");
 
             	String text = rs.getString("text");
-            	String keyword = rs.getString("keyword");
+            	//String keyword = rs.getString("keyword");
             	String user = rs.getString("user");
             	String c1 = rs.getString("latitude");
             	String c2 = rs.getString("longitude");
@@ -199,8 +118,6 @@ public class Rds {
             	String sentiment = rs.getString("sentiment");
 
             	res.add(new TweetRequest(id, time, text, user, Double.valueOf(c2), Double.valueOf(c1), Double.valueOf(sentiment)));
-
-                count++;
             	}
             }
 
@@ -213,44 +130,8 @@ public class Rds {
         return res;
     }
     
-    public synchronized String selectTimeRange(String table, String start, String end) {
-        String sql = "SELECT * FROM "+table+" WHERE created_at < '"+end+"' AND created_at > '"+start+"'";
-//    	String selectExpression = "select * from " + table + " where created_at > '"+start+"' and created_at < '"+end+"'";
-        StringBuilder sb = new StringBuilder();
-        Statement stmt;
-        int count = 0;
-        try {
-            stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-            while(rs.next()){
-            	String id = rs.getString("id_str");
-
-            	String text = rs.getString("text");
-            	String keyword = rs.getString("keyword");
-            	String user = rs.getString("user");
-            	String c1 = rs.getString("latitude");
-            	String c2 = rs.getString("longitude");
-            	String time = rs.getString("created_at");
-            	Boolean sen = rs.getBoolean("sentiment_exist");
-
-            	System.out.println("Keyword:" + keyword + "User:" + user + " Text:" + text+ " Created_at:"+ time + " id:"+id+ " sen:" + sen + " C1:" + c1);
-
-                count++;
-            }
-
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(count);
-        return sb.toString();
-
-    }
-
-    public synchronized void insert(String id_str, String keyword, String user, String text, String latitude, String longitude, String created_at) {
+    @SuppressWarnings("static-access")
+	public synchronized void insert(String id_str, String keyword, String user, String text, String latitude, String longitude, String created_at) {
         System.out.println("Inserting into table " +table );
         String sql = "INSERT INTO " + table + " VALUES (?,?,?,?,?,?,?,?,?)";
         PreparedStatement ps;
@@ -275,16 +156,25 @@ public class Rds {
 	            break;
 	            
 	        } catch (SQLException e) {
-            	System.err.println("Reconnect to database.");
+				System.out.println(sql);
+				System.out.println("Reconnect to database in 3 seconds.");
+				try {
+					Thread.currentThread().sleep(3000);
+					conn.close();
+				} catch (Exception e1) {
+					e1.printStackTrace(System.out);
+				}
             	init();
-	            e.printStackTrace();
+                e.printStackTrace(System.out);
+                break;
 	        }
         }
 
 
     }
     
-    public synchronized void update(String id, double value){
+    @SuppressWarnings("static-access")
+	public synchronized void update(String id, double value){
     	String sql = "update tweet_sentiment set sentiment = ?, sentiment_exist = ? where id_str = ?";
     	PreparedStatement ps;
     	while (true) {
@@ -294,17 +184,23 @@ public class Rds {
 			     ps.setDouble(1, value);
 			     ps.setBoolean(2, true);
 			     ps.setString(3, id);
-			
-			
 			     ps.executeUpdate();
 			
 			     ps.close();
 			     break;
 			     
-			 } catch (SQLException e) {
-            	System.err.println("Reconnect to database.");
-            	init();
-			     e.printStackTrace();
+			 } catch (Exception e) {
+					System.out.println(sql);
+					System.out.println("Reconnect to database in 3 seconds.");
+					try {
+						Thread.currentThread().sleep(3000);
+						conn.close();
+					} catch (Exception e1) {
+						e1.printStackTrace(System.out);
+					}
+	            	init();
+	                e.printStackTrace(System.out);
+	                break;
 			 }
     	}
 

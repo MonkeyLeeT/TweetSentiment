@@ -1,5 +1,5 @@
 
-public class SnsMessage {
+public class SNSMessage {
 	public String Type;
 	public String MessageId;
 	public String Token;
