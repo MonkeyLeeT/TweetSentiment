@@ -1,4 +1,10 @@
+import java.io.IOException;
+import java.io.InputStream;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class TweetRequest {
+	private static final ObjectMapper MAPPER = new ObjectMapper();
     private String id_str;
     private String created_at;
     private String text;
@@ -18,6 +24,10 @@ public class TweetRequest {
     	this.sentiment=sentiment;
     }
     
+    public static TweetRequest fromJson(final InputStream json) throws IOException {    
+        return MAPPER.readValue(json, TweetRequest.class);
+    }
+
 	public String getId_str() {
 		return id_str;
 	}
@@ -65,8 +75,6 @@ public class TweetRequest {
 	public void setLatitude(double latitude) {
 		this.latitude = latitude;
 	}
-
-    
     
     public double getSentiment() {
 		return sentiment;
@@ -75,7 +83,4 @@ public class TweetRequest {
 	public void setSentiment(double sentiment) {
 		this.sentiment = sentiment;
 	}
-
-
-    
 }

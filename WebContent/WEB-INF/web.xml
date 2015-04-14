@@ -8,16 +8,16 @@
   </welcome-file-list>
   <servlet>
     <description></description>
-    <display-name>getTweets</display-name>
-    <servlet-name>getTweets</servlet-name>
-    <servlet-class>getTweets</servlet-class>
+    <display-name>TweetQuery</display-name>
+    <servlet-name>TweetQuery</servlet-name>
+    <servlet-class>TweetQuery</servlet-class>
   </servlet>
   <listener>
     <listener-class>TweetStream</listener-class>
   </listener>
   <servlet-mapping>
-    <servlet-name>getTweets</servlet-name>
-    <url-pattern>/getTweets</url-pattern>
+    <servlet-name>TweetQuery</servlet-name>
+    <url-pattern>/TweetQuery</url-pattern>
   </servlet-mapping>
   <servlet>
     <description></description>

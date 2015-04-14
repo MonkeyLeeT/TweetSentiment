@@ -16,13 +16,13 @@ import com.google.gson.Gson;
 /**
  * Servlet implementation class getTweets
  */
-public class getTweets extends HttpServlet {
+public class TweetQuery extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public getTweets() {
+    public TweetQuery() {
         super();
     }
 
@@ -44,6 +44,7 @@ public class getTweets extends HttpServlet {
 		PrintWriter out = response.getWriter();
 		List<TweetRequest> list = null;
 		Rds rds = Rds.getInstance();
+		
 		if (!rds.isPasswordSet())
 			rds.setPassword(readPass());
 		try {
@@ -51,6 +52,7 @@ public class getTweets extends HttpServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		Gson gson = new Gson();
         out.print(gson.toJson(list));
         out.flush();

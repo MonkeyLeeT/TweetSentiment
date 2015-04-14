@@ -132,7 +132,7 @@ public class Rds {
     
     @SuppressWarnings("static-access")
 	public synchronized void insert(String id_str, String keyword, String user, String text, String latitude, String longitude, String created_at) {
-        System.out.println("Inserting into table " +table );
+        //System.out.println("Inserting into table " +table );
         String sql = "INSERT INTO " + table + " VALUES (?,?,?,?,?,?,?,?,?)";
         PreparedStatement ps;
         while (true) {

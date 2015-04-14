@@ -69,7 +69,7 @@ public class SQS {
 	
 	public void sendMessage(String myQueueUrl, String message){
 		try{
-			System.out.println("Sending a message");
+			//System.out.println("Sending a message");
 	        sqs.sendMessage(new SendMessageRequest(myQueueUrl, message));
 		} catch (AmazonServiceException ase) {
 	        System.out.println("Caught an AmazonServiceException, which means your request made it " +

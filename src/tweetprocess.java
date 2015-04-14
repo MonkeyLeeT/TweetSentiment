@@ -53,14 +53,14 @@ public final class TweetProcess {
         StatusListener listener = new StatusListener() {
         	
         	public void handleTweet(String keyword, String id_str, String text, String user, String created_at, double latitude, double longitude){	
-                System.out.println("Keyword:" + keyword + "user:" + user + "id:" + id_str);
+                //System.out.println("Keyword:" + keyword + "user:" + user + "id:" + id_str);
         		Rds rds = Rds.getInstance();
         		if (!rds.isPasswordSet()) {
         			rds.setPassword(readPass());
         		}
                 rds.insert(String.valueOf(id_str), keyword, user, text, String.valueOf(latitude), String.valueOf(longitude), created_at);
                 Tweet tweet = new Tweet(id_str, created_at, text, user, longitude, latitude);
-                System.out.println(gson.toJson(tweet));
+                //System.out.println(gson.toJson(tweet));
                 sqs.sendMessage(queueUrl, gson.toJson(tweet));
         	}
         	
@@ -70,16 +70,16 @@ public final class TweetProcess {
             		String text=status.getText().toLowerCase();
             		String keyword=null;
             		
-            		if (text.contains("movie")) 
-            			keyword="movie";
-            		else if (text.contains("party"))
-            			keyword="party";
-            		else if (text.contains("food"))
+            		if (text.contains("food")) 
             			keyword="food";
-            		else if (text.contains("soccer"))
-            			keyword="soccer";
+            		else if (text.contains("game"))
+            			keyword="game";
+            		else if (text.contains("music"))
+            			keyword="music";
+            		else if (text.contains("sport"))
+            			keyword="sport";
             		
-            		if (status.getGeoLocation() != null)
+            		if (keyword != null && status.getGeoLocation() != null)
             			handleTweet(keyword,String.valueOf(status.getId()), status.getText(), status.getUser().getScreenName(), status.getCreatedAt().toString(), status.getGeoLocation().getLatitude(), status.getGeoLocation().getLongitude());
             	}
             }
@@ -111,7 +111,7 @@ public final class TweetProcess {
         };
         
         FilterQuery fq = new FilterQuery();
-        String keys[] = {"movie","party","food","soccer"};
+        String keys[] = {"food"};
         fq.track(keys);
         twitterStream.addListener(listener);
 	    twitterStream.filter(fq); 

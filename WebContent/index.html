@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Ted Li">
 
-    <title>TweetMap</title>
+    <title>TweetSentiment</title>
 
     <!-- Bootstrap core CSS -->
     <link href="boot/css/bootstrap.min.css" rel="stylesheet">
@@ -33,7 +33,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">TweetMap</a>
+            <a class="navbar-brand" href="#">TweetSentiment</a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -48,13 +48,14 @@
 <div class="container">
 
     <!-- Main component for a primary marketing message or call to action -->
-    <div class="jumbotron">
-        <h1>TweetMap</h1>
 
-        <p>This application helps you track the latest tweets of your interests.
+    <div class="jumbotron">
+        <h1>TweetSentiment</h1>
+
+        <p>This application helps you track the latest tweets of your interests as well as their sentiments.
             By default it's pulling data from some <a href="http://aws.amazon.com/rds/" title="RDS">magic place</a> instead of Twitter.
             You can change to real time mode to see latest tweets poping up.</p>
-        <p><a class="btn btn-info btn-lg" href="https://github.com/MonkeyLeeT/TweetMap" role="button">Learn more on my GitHub</a></p>
+        <p><a class="btn btn-success btn-lg" href="https://github.com/MonkeyLeeT/TweetSentiment" role="button">Learn more on my GitHub</a>
     </div>
 
     <div class="row" id="sliderconainer">
@@ -82,23 +83,27 @@
                 <option>music</option>
                 <option>sport</option>
             </select>
-            <br/>
 
             <p>
-                <b>Mode switch:</b>:
+                <b>Mode switch:</b>
             </p>
-
+            <div>
             <button type="button" class="btn btn-default btn-modes" id="btn-scatter" title="This is the scatter view of tweets in this period.">
                 <span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span>Scatter</button>
             <button type="button" class="btn btn-default btn-modes" id="btn-heatmap" title="This is the heat map of tweets in this period.">
                 <span class="glyphicon glyphicon-tint" aria-hidden="true"></span>Heatmap</button>
             <button type="button" class="btn btn-default btn-modes" id="switch" title="Turn off ligt. Click anywhere to resume.">
                 <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>Light</button>
-            <p></p>
-            <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/search?q=%23food%20OR%20%23game%20OR%20%23music%20OR%20%23sport" data-widget-id="574399363486715905">Real-Time Tweets about #food OR #game OR #music OR #sport</a>
+            <br></br>
+            <p class="bg-warning">
+                <span class="glyphicon glyphicon-heart" aria-hidden="true"></span> Overall Sentiment:           
+                <span id="overall_sentiment" class="badge">0</span>
+            </p>
+            </div>
+
+            <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/search?q=%23food%20OR%20%23game%20OR%20%23music%20OR%20%23sport" data-widget-id="574399363486715905">Real-Time Tweets about all key words</a>
 
         </div>
-
         <div class="col-md-9" id="foo">
             <div id="loading">
                 <div id="spinner"></div>
@@ -124,7 +129,7 @@
                 <h4 class="modal-title" id="myModalLabel">Real Time Mode</h4>
             </div>
             <div class="modal-body">
-                <p>Real time tweets about all keywords will be shown in this mode.</p>
+                <p>Real time tweets and their sentiments about all keywords will be shown in this mode.</p>
                 <p>These tweets will be saved in  <a href="http://aws.amazon.com/rds/" title="RDS">magic place</a> for filtering.</p>
             </div>
             <div class="modal-footer">
@@ -237,6 +242,7 @@
         for (var i = 0; i < msg.length; i++) {
             var point = msg[i];
             var myLatlng = new google.maps.LatLng(point['latitude'], point['longitude']);
+            var sentiment = point['sentiment'];
             tweetPoints.push(myLatlng);
         }
         var pointArray = new google.maps.MVCArray(tweetPoints);
@@ -264,7 +270,7 @@
         var max = slider.rangeSlider("max") + time.getTimezoneOffset() * 60;
         $.ajax({
             type: "POST",
-            url: "getpoints",
+            url: "TweetQuery",
             beforeSend: showLoading,
             data: {"keyword": keyword, "start": min.toString().concat("000"), "end": max.toString().concat("000")},
             success: function (msg) {
@@ -295,7 +301,17 @@
         $('#btn-heatmap').click(function () {
             getData(displayHeatMap);
         });
-
+        var n = -1;
+        var os = $('#overall_sentiment');
+        setInterval(function(){
+            var scale = 0.5 - n * 0.5;
+            var color = " rgb(" + parseInt(255 * scale) + "," + parseInt((255 * (1 - scale)))  +",0);";
+            console.log(color);
+            os.css("background-color",  color);
+            os.html(n);
+            n += 0.01
+        },200);
+        console.log("hey!")
     });
 </script>
 <script>
@@ -312,7 +328,6 @@
             $('#btn-realtime').hide();
             $('#btn-exitrealtime').show();
             connectToServer();
-            $('#description').html("Now you are in Real Time Mode. You can click the markers to see the content of tweet.");
         });
         $('#btn-exitrealtime').click(function () {
             clearMap();
@@ -327,8 +342,7 @@
     });
     function connectToServer() {
         if (webSocket == null) {
-            var wsServer = 'ws://ec2-54-152-153-240.compute-1.amazonaws.com:11111';
-            wsServer = 'ws://160.39.40.182:8080/twitterMap/echo';
+            var wsServer = 'ws://localhost/websocket';
             webSocket = new WebSocket(wsServer);
             webSocket.onopen = function () {
                 onOpen();
@@ -347,8 +361,11 @@
     }
     function onMessage(evt) {
         var msg = JSON.parse(evt.data);
-        var myLatlng = new google.maps.LatLng(msg['coordinates']['coordinates'][1], msg['coordinates']['coordinates'][0]);
-        addMarker(myLatlng, msg['id_str'], "real");
+        var keyword = $('#sel-keywords').val();
+        if (msg['text'].indexOf(keyword) > -1) {
+        	var myLatlng = new google.maps.LatLng(msg['latitude'], msg['longitude']);
+            addMarker(myLatlng, msg['id_str'], "real");
+    	}
     }
 
     $(document).ready(function () {
