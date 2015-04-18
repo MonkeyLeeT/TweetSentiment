@@ -20,6 +20,105 @@
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
+<style>
+svg {
+  font: 10px sans-serif;
+}
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+</style>
+
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var total_sentiment = 0;
+var total_counter = 0;
+var sentiment_positive = [];
+var sentiment_negative = [];
+var sentiment_neutral = [];
+var sentiment_all = [];
+var real_total_sentiment = 0;
+var real_counter = 0;
+
+var n = 40,
+    random = d3.random.normal(0, .2),
+    data = d3.range(n).map(random);
+
+var margin = {top: 20, right: 20, bottom: 20, left: 80},
+    width = 1024 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .domain([1, n - 2])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([-1, 1])
+    .range([height, 0]);
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d, i) { return x(i); })
+    .y(function(d, i) { return y(d); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + y(0) + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom"));
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(d3.svg.axis().scale(y).orient("left"));
+
+var path = svg.append("g")
+    .attr("clip-path", "url(#clip)")
+  .append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("d", line);
+
+tick();
+
+function tick() {
+  // push a new data point onto the back
+  	//console.log(real_total_sentiment);
+  	data.push(random());
+  // redraw the line, and slide it to the left
+  path
+      .attr("d", line)
+      .attr("transform", null)
+      .transition()
+      .duration(500)
+      .ease("linear")
+      .attr("transform", "translate(" + x(0) + ",0)")
+      .each("end", tick);
+
+  // pop the old data point off the front
+  data.shift();
+}
+</script>
 
 <body>
 
@@ -37,7 +136,8 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="#">Home</a></li>
+                <li class="active trend" ><a href="#">Trend</a></li>
+                <li class="about"><a href="#">About</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
@@ -49,7 +149,7 @@
 
     <!-- Main component for a primary marketing message or call to action -->
 
-    <div class="jumbotron">
+    <div class="jumbotron" id ="about">
         <h1>TweetSentiment</h1>
 
         <p>This application helps you track the latest tweets of your interests as well as their sentiments.
@@ -80,7 +180,7 @@
             <select class="form-control" name="sel-keywords" id="sel-keywords">
                 <option>food</option>
                 <option>game</option>
-                <option>music</option>
+                <option>love</option>
                 <option>sport</option>
             </select>
 
@@ -236,14 +336,7 @@
         }
     }
 
-    var total_sentiment = 0;
-    var total_counter = 0;
-    var sentiment_positive = [];
-    var sentiment_negative = [];
-    var sentiment_neutral = [];
-    var sentiment_all = [];
-    var real_total_sentiment = 0;
-    var real_counter = 0;
+
 
     
     function displayHeatMap(msg) {
@@ -371,8 +464,19 @@
         $('#btn-heatmap').click(function () {
             getData(displayHeatMap);
         });
-        var n = -1;
-        var os = $('#overall_sentiment');
+        $("li.trend").click(function () {
+            $('.active').removeClass('active');
+            $(this).addClass("active");
+            $("svg").show();
+            $("#about").hide();
+        });
+
+        $("li.about").click(function () {
+            $('.active').removeClass('active');
+            $(this).addClass("active");
+            $("#about").show();
+            $("svg").hide();
+    });
        /* setInterval(function(){
             var scale = 0.5 - n * 0.5;
             var color = " rgb(" + parseInt(255 * scale) + "," + parseInt((255 * (1 - scale)))  +",0);";
@@ -381,7 +485,6 @@
             os.html(n);
             n += 0.01
         },200);*/
-        console.log("hey!")
     });
 </script>
 <script>
@@ -409,16 +512,18 @@
             webSocket.close();
             webSocket = null;
         });
+        $('')
     });
     function connectToServer() {
         if (webSocket == null) {
-            var wsServer = 'ws://localhost/websocket';
+            var wsServer = 'ws://localhost:8080/TweetSentiment/websocket';
             webSocket = new WebSocket(wsServer);
             webSocket.onopen = function () {
                 onOpen();
             };
             webSocket.onmessage = function (evt) {
-                onMessage(evt);
+                onMessage(evt);                
+                //console.log(evt);
             };
             webSocket.onerror = function (evt) {
                 webSocket = null;
@@ -427,14 +532,15 @@
         }
     }
     function onOpen() {
-        //alert("open!");
+        console.log('connected!');
     }
     function onMessage(evt) {
         var msg = JSON.parse(evt.data);
         var keyword = $('#sel-keywords').val();
-        if (msg['text'].indexOf(keyword) > -1) {
+        if (msg['text'].indexOf(keyword) > -2) {
         	var myLatlng = new google.maps.LatLng(msg['latitude'], msg['longitude']);
             addMarker(myLatlng, msg['id_str'], "real");
+            real_sentiment = msg['sentiment'];
     	}
     }
 

@@ -53,7 +53,7 @@ public final class TweetProcess {
         StatusListener listener = new StatusListener() {
         	
         	public void handleTweet(String keyword, String id_str, String text, String user, String created_at, double latitude, double longitude){	
-                //System.out.println("Keyword:" + keyword + "user:" + user + "id:" + id_str);
+                System.out.println("Keyword:" + keyword + ", user:" + user + ", str_id:" + id_str);
         		Rds rds = Rds.getInstance();
         		if (!rds.isPasswordSet()) {
         			rds.setPassword(readPass());
@@ -74,8 +74,8 @@ public final class TweetProcess {
             			keyword="food";
             		else if (text.contains("game"))
             			keyword="game";
-            		else if (text.contains("music"))
-            			keyword="music";
+            		else if (text.contains("love"))
+            			keyword="love";
             		else if (text.contains("sport"))
             			keyword="sport";
             		
@@ -111,7 +111,7 @@ public final class TweetProcess {
         };
         
         FilterQuery fq = new FilterQuery();
-        String keys[] = {"food"};
+        String keys[] = {"food", "game", "sport", "love"};
         fq.track(keys);
         twitterStream.addListener(listener);
 	    twitterStream.filter(fq); 

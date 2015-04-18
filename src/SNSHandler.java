@@ -59,7 +59,7 @@ public class SNSHandler extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		String messagetype = request.getHeader("x-amz-sns-message-type");
-		System.out.print("Got a message: " + messagetype);
+		System.out.println("Got a message: " + messagetype);
 		// If message doesn't have the message type header, don't process it.
 		if (messagetype == null)
 			return;
@@ -88,7 +88,6 @@ public class SNSHandler extends HttpServlet {
 		}
 		// Process the message based on type.
 		if (messagetype.equals("Notification")) {
-			//Do something with the Message and Subject.
 			//Just log the subject (if it exists) and the message.
 			String logMsgAndSubject = ">>Notification received from topic " + message.TopicArn;
 			if (message.Subject != null)
@@ -101,7 +100,6 @@ public class SNSHandler extends HttpServlet {
 		{
 			//You should make sure that this subscription is from the topic you expect. Compare topicARN to your list of topics 
 			//that you want to enable to add this endpoint as a subscription.
-
 			//Confirm the subscription by going to the subscribeURL location 
 			//and capture the return value (XML message body as a string))
 			Scanner sc = new Scanner(new URL(message.SubscribeURL).openStream());
@@ -126,10 +124,9 @@ public class SNSHandler extends HttpServlet {
 			System.out.println(">>Subscription confirmation (" + message.SubscribeURL +") Return value: " + sb.toString());
 		}
 		else {
-			//Handle unknown message type.
 			System.out.println(">>Unknown message type.");
 		}
-		//System.out.println(">>Done processing message: " + message.MessageId);
+		System.out.println(">>Done processing message: " + message.MessageId);
 	}
 
 	private boolean isMessageSignatureValid(SNSMessage msg) {
