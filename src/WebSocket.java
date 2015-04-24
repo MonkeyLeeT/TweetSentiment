@@ -41,10 +41,8 @@ public class WebSocket {
 
 	public static void broadcast(String msg) {
 		for (WebSocket client : connections) {
-			System.out.println("haha2");
 			try {
 				synchronized (client) {
-					System.out.println("haha");	
 					client.session.getBasicRemote().sendText(msg);
 				}
 			} catch (IOException e) {

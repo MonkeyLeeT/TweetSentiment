@@ -47,11 +47,13 @@ var sentiment_positive = [];
 var sentiment_negative = [];
 var sentiment_neutral = [];
 var sentiment_all = [];
-var real_total_sentiment = 0;
-var real_counter = 0;
+var real_sentiment = 0;
+var avg_sentiment = 0;
+var total_sentiment = 0;
+var total_counter = 0;
 
 var n = 40,
-    random = d3.random.normal(0, .2),
+    random = d3.random.normal(0, 0);
     data = d3.range(n).map(random);
 
 var margin = {top: 20, right: 20, bottom: 20, left: 80},
@@ -103,8 +105,8 @@ tick();
 
 function tick() {
   // push a new data point onto the back
-  	//console.log(real_total_sentiment);
-  	data.push(random());
+  	//console.log(real_sentiment);
+  	data.push(real_sentiment);
   // redraw the line, and slide it to the left
   path
       .attr("d", line)
@@ -201,7 +203,7 @@ function tick() {
             </p>
             </div>
 
-            <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/search?q=%23food%20OR%20%23game%20OR%20%23music%20OR%20%23sport" data-widget-id="574399363486715905">Real-Time Tweets about all key words</a>
+            <a class="twitter-timeline" data-dnt="true" href="https://twitter.com/search?q=%23food%20OR%20%23game%20OR%20%23love%20OR%20%23sport" data-widget-id="574399363486715905">Real-Time Tweets about all key words</a>
 
         </div>
         <div class="col-md-9" id="foo">
@@ -279,7 +281,7 @@ function tick() {
 <script type="text/javascript">
     window.google = window.google || {};
     google.maps = google.maps || {};
-    var map, heatmap;
+    var map, heatmap_positive, heatmap_negetive;
     var markers = [];
     var mapOptions = {
         zoom: 2,
@@ -328,7 +330,7 @@ function tick() {
     }
 
     function displayScatter(msg) {
-        clearMap();
+        clearAll();
         for (var i = 0; i < msg.length; i++) {
             var point = msg[i];
             var myLatlng = new google.maps.LatLng(point['latitude'], point['longitude']);
@@ -340,7 +342,7 @@ function tick() {
 
     
     function displayHeatMap(msg) {
-    	clearMap();
+    	clearAll();
         // Positive
         var tweetPoints_positive = [];
         for (var i = 0; i < sentiment_positive.length; i++) {
@@ -399,7 +401,9 @@ function tick() {
             total_sentiment += tweet['sentiment'];
             total_counter++;
         }
-        $('#numoftweets').html(total_counter);
+        avg_sentiment = total_sentiment / total_counter;
+        colorOS(avg_sentiment);
+        
     }
     
     function clearAll() {
@@ -410,11 +414,14 @@ function tick() {
         sentiment_negative = [];
         sentiment_neutral = [];
         sentiment_all = [];
+        colorOS(0);
     }
     
     function clearMap() {
-        if (heatmap != null)
-            heatmap.setMap(null);
+        if (heatmap_positive != null)
+            heatmap_positive.setMap(null);
+        if (heatmap_negetive != null)
+        	heatmap_negetive.setMap(null);
         for (var i = 0; i < markers.length; i++) {
             markers[i].setMap(null);
         }
@@ -444,6 +451,14 @@ function tick() {
         });
     }
     
+    function colorOS(s) {
+    	var scale = 0.5 - s * 0.5;
+        var color = " rgb(" + parseInt(255 * scale) + "," + parseInt((255 * (1 - scale)))  +",0);";
+        var os = $('#overall_sentiment');
+        //console.log(color);
+        os.css("background-color",  color);
+        os.html(parseInt(s * 100)/100);
+    }
     
 
     function showLoading() {
@@ -476,15 +491,7 @@ function tick() {
             $(this).addClass("active");
             $("#about").show();
             $("svg").hide();
-    });
-       /* setInterval(function(){
-            var scale = 0.5 - n * 0.5;
-            var color = " rgb(" + parseInt(255 * scale) + "," + parseInt((255 * (1 - scale)))  +",0);";
-            console.log(color);
-            os.css("background-color",  color);
-            os.html(n);
-            n += 0.01
-        },200);*/
+    	});
     });
 </script>
 <script>
@@ -492,7 +499,7 @@ function tick() {
     var realTimeMode = false;
     $(document).ready(function () {
         $('#btn-enterrealtime').click(function () {
-            clearMap();
+            clearAll();
             $('#sel-keywords').prop('disabled', true);
             $('#btn-scatter').prop('disabled', true);
             $('#btn-heatmap').prop('disabled', true);
@@ -503,7 +510,7 @@ function tick() {
             connectToServer();
         });
         $('#btn-exitrealtime').click(function () {
-            clearMap();
+            clearAll();
             $('#sel-keywords').prop('disabled', false);
             $('.btn-modes').prop('disabled', false);
             $('#slider').rangeSlider("enable");
@@ -511,13 +518,13 @@ function tick() {
             $('#btn-exitrealtime').hide();
             webSocket.close();
             webSocket = null;
-            getData(displayHeatMap);
         });
         $('')
     });
     function connectToServer() {
         if (webSocket == null) {
             var wsServer = 'ws://localhost:8080/TweetSentiment/websocket';
+            wsServer = 'ws://tweetsentiment15.elasticbeanstalk.com:8080/websocket';
             webSocket = new WebSocket(wsServer);
             webSocket.onopen = function () {
                 onOpen();
@@ -538,10 +545,14 @@ function tick() {
     function onMessage(evt) {
         var msg = JSON.parse(evt.data);
         var keyword = $('#sel-keywords').val();
-        if (msg['text'].indexOf(keyword) > -2) {
+        if (msg['text'].indexOf(keyword) > -1) {
         	var myLatlng = new google.maps.LatLng(msg['latitude'], msg['longitude']);
             addMarker(myLatlng, msg['id_str'], "real");
             real_sentiment = msg['sentiment'];
+            total_sentiment += real_sentiment;
+            total_counter++;
+            avg_sentiment = total_sentiment/total_counter;
+            colorOS(avg_sentiment);
     	}
     }
 

@@ -89,11 +89,11 @@ public class SNSHandler extends HttpServlet {
 		// Process the message based on type.
 		if (messagetype.equals("Notification")) {
 			//Just log the subject (if it exists) and the message.
-			String logMsgAndSubject = ">>Notification received from topic " + message.TopicArn;
+			/*String logMsgAndSubject = ">>Notification received from topic " + message.TopicArn;
 			if (message.Subject != null)
 				logMsgAndSubject += " Subject: " + message.Subject;
 			logMsgAndSubject += " Message: " + message.Message;
-			System.out.println(logMsgAndSubject);
+			System.out.println(logMsgAndSubject);*/
 			WebSocket.broadcast(message.Message);
 		}
 		else if (messagetype.equals("SubscriptionConfirmation"))
@@ -126,7 +126,7 @@ public class SNSHandler extends HttpServlet {
 		else {
 			System.out.println(">>Unknown message type.");
 		}
-		System.out.println(">>Done processing message: " + message.MessageId);
+		//System.out.println(">>Done processing message: " + message.MessageId);
 	}
 
 	private boolean isMessageSignatureValid(SNSMessage msg) {

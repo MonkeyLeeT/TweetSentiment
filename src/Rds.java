@@ -96,8 +96,10 @@ public class Rds {
         String sql = "SELECT * FROM " + table + 
         		" WHERE created_at < '" + end + 
         		"' AND created_at > '" + start +
+        		"' AND keyword = '" + key +
         		"'";
         Statement stmt;
+        System.out.println(sql);
         List<TweetRequest> res = new ArrayList<TweetRequest> ();
         try {
             stmt = conn.createStatement();
