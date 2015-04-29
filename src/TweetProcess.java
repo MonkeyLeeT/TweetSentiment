@@ -111,7 +111,7 @@ public final class TweetProcess {
         };
         
         FilterQuery fq = new FilterQuery();
-        String keys[] = {"food", "game", "sport", "love"};
+        String keys[] = {"food", "game", "love", "sport"};
         fq.track(keys);
         twitterStream.addListener(listener);
 	    twitterStream.filter(fq); 

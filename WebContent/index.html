@@ -330,7 +330,7 @@ function tick() {
     }
 
     function displayScatter(msg) {
-        clearAll();
+        clearMap();
         for (var i = 0; i < msg.length; i++) {
             var point = msg[i];
             var myLatlng = new google.maps.LatLng(point['latitude'], point['longitude']);
@@ -342,7 +342,7 @@ function tick() {
 
     
     function displayHeatMap(msg) {
-    	clearAll();
+    	clearMap();
         // Positive
         var tweetPoints_positive = [];
         for (var i = 0; i < sentiment_positive.length; i++) {
@@ -387,7 +387,12 @@ function tick() {
     }
 
     function processData(msg) {
-        clearAll();
+        total_sentiment = 0;
+        total_counter = 0;
+        sentiment_positive = [];
+        sentiment_negative = [];
+        sentiment_neutral = [];
+        sentiment_all = [];
         for (var i = 0; i < msg.length; i++) {
             var tweet = msg[i];
             sentiment_all.push(tweet);
@@ -406,15 +411,13 @@ function tick() {
         
     }
     
-    function clearAll() {
-        clearMap();
+    function clearData() {
         total_sentiment = 0;
         total_counter = 0;
         sentiment_positive = [];
         sentiment_negative = [];
         sentiment_neutral = [];
         sentiment_all = [];
-        colorOS(0);
     }
     
     function clearMap() {
@@ -427,6 +430,7 @@ function tick() {
         }
         markers = [];
         mc.clearMarkers();
+        colorOS(0);
     }
 
     var time = new Date();
@@ -499,7 +503,8 @@ function tick() {
     var realTimeMode = false;
     $(document).ready(function () {
         $('#btn-enterrealtime').click(function () {
-            clearAll();
+            clearMap();
+            clearData();
             $('#sel-keywords').prop('disabled', true);
             $('#btn-scatter').prop('disabled', true);
             $('#btn-heatmap').prop('disabled', true);
@@ -510,7 +515,8 @@ function tick() {
             connectToServer();
         });
         $('#btn-exitrealtime').click(function () {
-            clearAll();
+            clearMap();
+            clearData();
             $('#sel-keywords').prop('disabled', false);
             $('.btn-modes').prop('disabled', false);
             $('#slider').rangeSlider("enable");
